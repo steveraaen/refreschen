@@ -1,9 +1,9 @@
 
 import React, { Component } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Button, Platform, StyleSheet, Text, View, ProgressViewIOS } from 'react-native';
 import BackgroundFetch from "react-native-background-fetch";
 import * as firebase from 'firebase';
-import { Calendar } from 'react-native-calendars' 
+import { CalendarList } from 'react-native-calendars' 
 import moment from 'moment'
 import axios from 'axios'
 
@@ -27,7 +27,7 @@ const _minDate = moment().subtract(90, 'days').format(_format)
 export default class App extends Component {
   constructor(props) {
     initialState = {
-      [_today]: {disabled: true}
+      [_today]: {}
       }
     super(props);    
       this.state={
@@ -38,6 +38,7 @@ export default class App extends Component {
       this.onDaySelect = this.onDaySelect.bind(this)
       this.calcDays = this.calcDays.bind(this)
       this.writeUserData = this.writeUserData.bind(this)
+      this.checkToday = this.checkToday.bind(this)
   } 
   writeUserData(uid, mkd, wdi, wdl) {
       console.log('clicked')
@@ -48,14 +49,22 @@ export default class App extends Component {
         daysLeft: wdl
       });
     } 
+  checkToday() {
+    this.revGeocode().then(() => {
+      if(this.state.curIn) 
+        this.setState({curCol: 'yellow'})
+    })
+  }
   onDaySelect(day) { 
       const _selectedDay = moment(day.dateString).format(_format);      
-      let marked = true;
+      /*let marked = true;*/
+      let selected = true;
       console.log(_selectedDay)
       if (this.state._markedDates[_selectedDay]) {
-        marked = !this.state._markedDates[_selectedDay].marked;
+      /*  marked = this.state._markedDates[_selectedDay].marked;*/
+        selected = !this.state._markedDates[_selectedDay].selected;
       }
-      const updatedMarkedDates = {...this.state._markedDates, ...{ [_selectedDay]: { marked } } }
+      const updatedMarkedDates = {...this.state._markedDates, ...{ [_selectedDay]: { /*marked,*/ selected } } }
       this.setState({ _markedDates: updatedMarkedDates }, () =>
           this.calcDays(this.state._markedDates)
         );
@@ -64,7 +73,7 @@ export default class App extends Component {
     console.log(mds)
     var mkdarr = []
     for( let mkds in mds) {
-      if(mds[mkds].marked) {
+      if(mds[mkds].selected) {
         mkdarr.push(mds[mkds])
       }
       console.log(mkdarr)
@@ -98,11 +107,11 @@ export default class App extends Component {
               curNear: curNear
                   }, () => {
                     if(this.state.curIn) {
-                      this.setState({curCol: 'blue'})
+                      this.setState({curCol: 'red'})
                     } else if(this.state.curNear) {
                       this.setState({curCol: 'green'})
                     } else if(this.state.curOut) {
-                      this.setState({curCol: 'gray'})
+                      this.setState({curCol: 'blue'})
                     }
                   })
                   }
@@ -118,17 +127,15 @@ export default class App extends Component {
        throw error
     }); 
   }
-    componentDidMount() {
+    componentWillMount() {
      console.log(firebaseApp.database())
      console.log(firebaseApp.auth())
 // configure, set test BG Fetch
     BackgroundFetch.configure({
-      minimumFetchInterval: 15, // <-- minutes (15 is minimum allowed)
-      stopOnTerminate: false,   // <-- Android-only,
-      startOnBoot: true         // <-- Android-only
+      minimumFetchInterval: 15,
     }, () => {
       console.log("[js] Received background-fetch event");
-      this.setState({test: "B"})
+      /*this.setState({test: "B"})*/
       // Required: Signal completion of your task to native code
       // If you fail to do this, the OS can terminate your app
       // or assign battery-blame for consuming too much background-time
@@ -136,6 +143,7 @@ export default class App extends Component {
     }, (error) => {
       console.log("[js] RNBackgroundFetch failed to start");
     });
+    BackgroundFetch.start(()=> this.setState({curTime: moment().format(_format)}))
     BackgroundFetch.status((status) => {
       switch(status) {
         case BackgroundFetch.STATUS_RESTRICTED:
@@ -160,16 +168,13 @@ export default class App extends Component {
       uid: firebase.auth().currentUser.uid,
     }, () => {
               database.ref('users/' + this.state.uid).set({
-                 uid: this.state.uid,
-                markedDates: "mkd",
-                daysInEU: "wdi",
-                daysLeft: "wdl"
+                 uid: this.state.uid
               });
              database.ref('users/' + this.state.uid).on('value', (snapshot) =>{
          this.setState({
           snp: snapshot.val(),
-          diEU: snapshot.val().daysInEU,
-          dlEU: snapshot.val().daysLeft,
+          daysInEU: snapshot.val().daysInEU,
+          daysLeft: snapshot.val().daysLeft,
           lastDay: moment().add(snapshot.val().daysInEU, 'days').format('MMMM Do YYYY'),
           mkddts: snapshot.val().markedDates
         })
@@ -211,22 +216,31 @@ export default class App extends Component {
 
 
       <View style={styles.container}>
-      <View>
-        <Text style={styles.welcome}>
-          {this.state.test}
-        </Text>
-      </View>
-            <Calendar 
-                style={{marginTop: 1}}           
-                theme={{ calendarBackground: 'black'}}
-                // we use moment.js to give the minimum and maximum dates.
-                minDate={_minDate}
-                maxDate={_maxDate}
-                onDayPress={this.onDaySelect}
-            
+      <View style={{marginTop: 38}}><Text style={{fontSize: 14, color: 'gray', textAlign: 'center'}}>You are in  <Text style={{fontSize: 22, color: 'white'}}>{this.state.ctry}</Text></Text></View>
+        <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 28}}>
+        <View style={{flex: .5}}><Text style={{color: 'white', fontSize: 18, textAlign: 'center'}}>Days In</Text></View>
+        <View style={{flex: .5}}><Text style={{color: 'white', fontSize: 18, textAlign: 'center'}}>Days Left</Text></View>
+        </View>
+        <View style={{flexDirection: 'row'}}>
+        <View style={{flex: .5}}><Text style={{color: 'white', fontSize: 24, textAlign: 'center'}}>{this.state.daysInEU}</Text></View>
+        <View style={{flex: .5}}><Text style={{color: 'white', fontSize: 24, textAlign: 'center'}}>{this.state.daysLeft}</Text></View>
+        </View>
+      
+      <View style={{marginTop: 14, marginBottom: 14}}><ProgressViewIOS  progressTintColor='red' trackTintColor='green' progress={this.state.daysInEU / 90}/></View>
 
+     
+            <CalendarList
+                horizontal={true}
+                style={{marginTop: 1}}           
+                theme={{ calendarBackground: 'black', dayTextColor: 'green', dotColor: 'red', monthTextColor: 'white', selectedDayBackgroundColor: this.state.curCol,}}
+                pastScrollRange={3}
+                futureScrollRange={0}
+                onDayPress={this.onDaySelect}
+                markedDates={this.state._markedDates}
              
-            />  
+            /> 
+        <View style={{alignItems: 'center'}}><Text style={{color: 'yellow'}}>{this.state.curTime}</Text></View>
+            <Button title="check" onPress={() => this.checkToday()}><Text style={{color: 'white'}}> Check</Text></Button> 
       </View>
     );
   }
@@ -235,18 +249,8 @@ export default class App extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
+ /*   justifyContent: 'center',*/
+  
+    backgroundColor: 'black'
+  }
 });
