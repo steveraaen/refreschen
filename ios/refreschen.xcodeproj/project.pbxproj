@@ -357,6 +357,7 @@
 		BA749A6D671C4E2D87376046 /* RNBackgroundFetch+AppDelegate.m */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.objc; name = "RNBackgroundFetch+AppDelegate.m"; path = "../node_modules/react-native-background-fetch/ios/RNBackgroundFetch/RNBackgroundFetch+AppDelegate.m"; sourceTree = "<group>"; };
 		D7B7A66F04634CFC8B02E4A8 /* TSBackgroundFetch.framework */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = wrapper.framework; name = TSBackgroundFetch.framework; path = "../node_modules/react-native-background-fetch/ios/RNBackgroundFetch/TSBackgroundFetch.framework"; sourceTree = SDKROOT; };
 		D80441970CA441BA908CB5E9 /* libRNBackgroundFetch.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRNBackgroundFetch.a; sourceTree = "<group>"; };
+		EC1F2F7D20BEF4130007A01F /* refreschen.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = refreschen.entitlements; path = refreschen/refreschen.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -498,6 +499,7 @@
 		13B07FAE1A68108700A75B9A /* refreschen */ = {
 			isa = PBXGroup;
 			children = (
+				EC1F2F7D20BEF4130007A01F /* refreschen.entitlements */,
 				008F07F21AC5B25A0029DE68 /* main.jsbundle */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.m */,
@@ -734,6 +736,9 @@
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
 								enabled = true;
+							};
+							com.apple.Push = {
+								enabled = 0;
 							};
 						};
 					};
